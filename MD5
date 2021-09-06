@@ -1,0 +1,9 @@
+98db2d2bc18ba00c9a5bfabe07ea9a47 *DESCRIPTION
+6c8722a2b6dd389c3c540a188db16b3f *NAMESPACE
+b8cf2fd1b88f6c696ac421124481b6bc *NEWS.md
+b66f1ed74ecb074b85b8743d1e75818a *R/data.R
+61fe26e2a9738aa9ad7242ac8774e7b0 *R/main.R
+da57c8e454a78ec735a97311f9df077b *R/sense.R
+23b015808fb68faca1128a626770241c *data/benchmark.rda
+4b6a857870c9fa2dc21767d716a2337f *man/benchmark.Rd
+a902f926b3466e6791e99432ec0cd7d4 *man/sense.Rd
