@@ -185,79 +185,56 @@ sense <- function(df, target_feat, benchmarking = "all",
 
   if("rpart" %in% c(selected, super))
   {
-    cp_range <- ParamDbl$new("regr.rpart.cp", lower = 0, upper = 1)
-    minsplit_range <- ParamInt$new("regr.rpart.minsplit", lower = 1, upper = selected_n_feats)
-    maxdepth_range <- ParamInt$new("regr.rpart.maxdepth", lower = 1, upper = 10)
-    param_range <- purrr::reduce(list(param_range, cp_range, minsplit_range, maxdepth_range), append)
+    param_range <- c(param_range,
+                     regr.rpart.cp = p_dbl(lower = 0, upper = 1),
+                     regr.rpart.minsplit = p_int(lower = 1, upper = selected_n_feats),
+                     regr.rpart.maxdepth = p_int(lower = 1, upper = 10))
   }
 
   if("glmnet" %in% c(selected, super))
   {
-    alpha_range <- ParamDbl$new("regr.glmnet.alpha", lower = 0, upper = 1)
-    s_range <- ParamDbl$new("regr.glmnet.s", lower = 0, upper = 1000)
-    param_range <- purrr::reduce(list(param_range, alpha_range, s_range), append)
+    param_range <- c(param_range,
+                     regr.glmnet.alpha = p_dbl(lower = 0, upper = 1),
+                     regr.glmnet.s = p_dbl(lower = 1, upper = 1000))
   }
 
   if("kknn" %in% c(selected, super))
   {
-    k_range <- ParamInt$new("regr.kknn.k", lower = 1, upper = round(n_objects/10))
-    #distance_range <- ParamDbl$new("regr.kknn.distance", lower = 1, upper = n_objects)
-    kernel_range <- ParamFct$new("regr.kknn.kernel", levels = c("rectangular","triangular", "epanechnikov", "biweight", "triweight","cos", "gaussian", "optimal", "inv"))
-    param_range <- purrr::reduce(list(param_range, k_range, kernel_range), append)
+    param_range <- c(param_range,
+                     regr.kknn.k = p_int(lower = 1, upper = round(n_objects/10)),
+                     regr.kknn.kernel = p_fct(levels = c("rectangular","triangular", "epanechnikov", "biweight", "triweight","cos", "gaussian", "optimal", "inv")))
   }
 
   if("xgboost" %in% c(selected, super))
   {
-    booster_range <- ParamFct$new("regr.xgboost.booster", levels = c("gbtree", "gblinear"))
-    alpha_range <- ParamDbl$new("regr.xgboost.alpha", lower = 0, upper = 1000)
-    eta_range <- ParamDbl$new("regr.xgboost.eta", lower = 0, upper = 1)
-    gamma_range <- ParamDbl$new("regr.xgboost.gamma", lower = 0, upper = 1000)
-    lambda_range <- ParamDbl$new("regr.xgboost.lambda", lower = 0, upper = 1000)
-    param_range <- purrr::reduce(list(param_range, booster_range, alpha_range, eta_range, gamma_range, lambda_range), append)
+    param_range <- c(param_range,
+                     regr.xgboost.booster = p_fct(levels = c("gbtree", "gblinear")),
+                     regr.xgboost.alpha = p_dbl(lower = 0, upper = 1000, depends = quote(regr.xgboost.booster == "gblinear")),
+                     regr.xgboost.eta = p_dbl(lower = 0, upper = 1, depends = quote(regr.xgboost.booster == "gbtree")),
+                     regr.xgboost.gamma = p_dbl(lower = 0, upper = 1000, depends = quote(regr.xgboost.booster == "gbtree")),
+                     regr.xgboost.lambda = p_dbl(lower = 0, upper = 1000, depends = quote(regr.xgboost.booster == "gblinear")))
   }
 
   if("ranger" %in% c(selected, super))
   {
-    splitrule_range <- ParamFct$new("regr.ranger.splitrule", levels = c("variance", "extratrees", "maxstat"))
-    alpha_range <- ParamDbl$new("regr.ranger.alpha", lower = 0, upper = 1)
-    min.node.size_range <- ParamInt$new("regr.ranger.min.node.size", lower = 1, upper = 30)
-    mtry_range <- ParamInt$new("regr.ranger.mtry", lower = 1, upper = selected_n_feats)
-    param_range <- purrr::reduce(list(param_range, alpha_range, min.node.size_range, mtry_range, splitrule_range), append)
+    param_range <- c(param_range,
+                     regr.ranger.splitrule = p_fct(levels = c("variance", "extratrees", "maxstat")),
+                     regr.ranger.alpha = p_dbl(lower = 0, upper = 1, depends = quote(regr.ranger.splitrule == "maxstat")),
+                     regr.ranger.min.node.size = p_int(lower = 1, upper = 30),
+                     regr.ranger.mtry = p_int(lower = 0, upper = selected_n_feats))
   }
 
   if("svm" %in% c(selected, super))
   {
-    kernel_range <- ParamFct$new("regr.svm.kernel", levels = c("linear", "polynomial", "radial", "sigmoid"))
-    type_range <- ParamFct$new("regr.svm.type", levels = c("eps-regression", "nu-regression"))
-    nu_range <- ParamDbl$new("regr.svm.nu", lower = 0, upper = 1)
-    gamma_range <- ParamDbl$new("regr.svm.gamma", lower = 0, upper = 1000)
-    coef0_range <- ParamDbl$new("regr.svm.coef0", lower = -1000, upper = 1000)
-    param_range <- purrr::reduce(list(param_range, kernel_range, type_range, nu_range, gamma_range, coef0_range), append)
+    param_range <- c(param_range,
+                     regr.svm.kernel = p_fct(levels = c("linear", "polynomial", "radial", "sigmoid")),
+                     regr.svm.type = p_fct(levels = c("eps-regression", "nu-regression")),
+                     regr.svm.nu = p_dbl(lower = 0, upper = 1, depends = quote(regr.svm.type == "nu-regression")),
+                     regr.svm.gamma = p_dbl(lower = 1, upper = 1000, depends = quote(regr.svm.kernel %in% c("polynomial", "radial", "sigmoid"))),
+                     regr.svm.coef0 = p_dbl(lower = -1000, upper = 1000, depends = quote(regr.svm.kernel %in% c("polynomial", "sigmoid"))))
   }
 
-
-  param_strat <- ParamSet$new(param_range)
-
-  ###DEPENDENCIES
-  if("xgboost" %in% c(selected, super))
-  {
-    param_strat$add_dep("regr.xgboost.eta", "regr.xgboost.booster", CondEqual$new("gbtree"))
-    param_strat$add_dep("regr.xgboost.gamma", "regr.xgboost.booster", CondEqual$new("gbtree"))
-    param_strat$add_dep("regr.xgboost.lambda", "regr.xgboost.booster", CondEqual$new("gblinear"))
-    param_strat$add_dep("regr.xgboost.alpha", "regr.xgboost.booster", CondEqual$new("gblinear"))
-  }
-
-  if("svm" %in% c(selected, super))
-  {
-    param_strat$add_dep("regr.svm.nu", "regr.svm.type", CondEqual$new("nu-regression"))
-    param_strat$add_dep("regr.svm.gamma", "regr.svm.kernel", CondAnyOf$new(c("polynomial", "radial", "sigmoid")))
-    param_strat$add_dep("regr.svm.coef0", "regr.svm.kernel", CondAnyOf$new(c("polynomial", "sigmoid")))
-  }
-
-  if("ranger" %in% c(selected, super))
-  {
-    param_strat$add_dep("regr.ranger.alpha", "regr.ranger.splitrule", CondEqual$new("maxstat"))
-  }
+  param_strat <- do.call(ps, param_range)
 
   ###FINE TUNING
   term_strat <- trm("combo", list(trm("stagnation", iters = ceiling(n_evals * patience), threshold = min_improve), trm("evals", n_evals = n_evals), trm("run_time", secs = minute_time * 60)), any = TRUE)
